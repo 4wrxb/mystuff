@@ -15,6 +15,18 @@ fi
 sudo apt update
 sudo apt install golang
 
+# If gopath is already being set leave it alone
+if [ -z "$GOPATH" ]; then
+  echo '' >> $HOME/.profile
+  echo '\nexport GOPATH="$HOME/go"\n' >> $HOME/.profile
+# Set gopath manually so we don't need to re-source anything
+  export GOPATH="$HOME/go"
+fi
+
+if [ ! -d $HOME/go ]; then
+  mkdir $HOME/go
+fi
+
 # set up assh through go
 if ! command -v 'assh' > /dev/null 2>&1; then
   if ! command -v 'go' > /dev/null 2>&1; then
@@ -36,13 +48,13 @@ if ! command -v 'assh' > /dev/null 2>&1; then
 
       #TODO: prompt before setting up assh devel environment?
       #TODO: generalize the godevel process and call that?
-      # cd $HOME/go/moul.io/assh
-      # git remote add my-fork git@github.com:4wrxb/assh.git
-      # git fetch my-fork
-      # git branch master -u my-fork/master
-      # git branch upstream_master origin/master
-      # git fetch my-fork master && git reset --hard FETCH_HEAD
-      # go install moul.io/assh
+      cd $HOME/go/src/moul.io/assh
+      git remote add my-fork git@github.com:4wrxb/assh.git
+      git fetch my-fork
+      git branch master -u my-fork/master
+      git branch upstream_master origin/master
+      git fetch my-fork master && git reset --hard FETCH_HEAD
+      go install moul.io/assh
     else
       echo "assh failed to install, did NOT set up config file etc.. Please check on your (a)ssh install."
     fi
@@ -50,12 +62,26 @@ if ! command -v 'assh' > /dev/null 2>&1; then
 fi
 
 # apt install
-# - git-crypt (probably already there, but harmless to repeat)
+# GENERAL:
+# - git-crypt (probably already done by bootstrap, but harmless to repeat)
 # - git-gui (bring gitk and a lot of font/X11 stuff I'll need anyway
 # - kdiff3
 # - meld
-# - perlbrew (gives us a build env too)
+# - perlbrew (gives us some build env too)
+# - python3
 # - unzip
+# - wget
 # - zsh
+# FOR OPENWRT:
+# - build-essential
+# - libncurses5-dev
+# - libncursesw5-dev
+# - python2
+# - zlib1g-dev
+# - gawk
+# - gettext
+# - libssl-dev
+# - xsltproc
+# FIXME: prompt for openwrt? Won't need it on work machines
 echo "Running apt install through sudo. Enter password if prompted."
-sudo apt install git-crypt git-gui kdiff3 meld perlbrew unzip zsh
+sudo apt install git-crypt git-gui kdiff3 meld perlbrew python3 unzip wget zsh build-essential libncurses5-dev libncursesw5-dev python2 zlib1g-dev gawk gettext libssl-dev xsltproc

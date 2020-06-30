@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# FIXME: known bashisms: select input method
+
 # Updated "includer" script
 
 loopdebug () {

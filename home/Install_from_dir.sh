@@ -1,10 +1,10 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
 ##############################
 # Sanity checks
 ##############################
 sanity_checks_ok=0
-if ! . Sanity_checks.sh || [ $sanity_checks_ok -ne "1" ]; then
+if ! . ./Sanity_checks.sh || [ $sanity_checks_ok -ne "1" ]; then
   echo "The sanity check script failed or could not be found, exiting."
   exit
 fi
@@ -49,6 +49,17 @@ then
 else
   m\v $HOME/.gitconfig.new $HOME/.gitconfig
 fi
+
+# TODO: .config (link?)
+
+##############################
+# WSL-specific changes
+##############################
+#if [ `uname -r`="*Microsoft" ]
+#then
+  echo "Making WSL speicfic changes"
+  . ./Install_wsl_software.sh
+#fi
 
 ##############################
 # Now run the injector for includes
