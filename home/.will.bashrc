@@ -1,10 +1,10 @@
 # ~/.will.bashrc: Cross-platform BASH related options
 
 # Use secho for safe printing only in interactive shells
-secho () {
+secho() {
   case $- in
-    *i*) echo "$@";;
-      *) return 1;;
+    *i*) echo "$@" ;;
+    *) return 1 ;;
   esac
 }
 
@@ -13,7 +13,8 @@ secho "running .will.bashrc"
 ##############################
 # WSL-specific settings
 ##############################
-if [ `uname -r`="*Microsoft" ]; then
+uname_result=$(uname -r)
+if [ "${uname_result%Microsoft}" != "$uname_result" ]; then
   echo "Linux is like if the creator of git wrote an operating system. - @SwiftOnSecurity"
   # Display 0 for the windows x server
   export DISPLAY=localhost:0
@@ -37,7 +38,7 @@ HISTFILESIZE=2000
 shopt -s checkwinsize
 
 # Use this for where we come from
-mystuffpath="$( readlink -f `dirname $BASH_SOURCE[0]` )"
+mystuffpath="$(readlink -f $(dirname $BASH_SOURCE[0]))"
 
 ################################################################################
 # end of configured options, need to go through this, mostly about color

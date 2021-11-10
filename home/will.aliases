@@ -9,15 +9,15 @@
 # DEBUG & ALIAS GUARD (the command -v checks break on re-run)
 ################################################################################
 # If running interactively, set veriable to print debug
-secho () {
+secho() {
   case $- in
-    *i*) echo "$@";;
-      *) return 1;;
+    *i*) echo "$@" ;;
+    *) return 1 ;;
   esac
 }
 
-resourcing () {
-   [ -z "${resource:+x}" ] && return 1 || return 0
+resourcing() {
+  [ -z "${resource:+x}" ] && return 1 || return 0
 }
 
 underscore="$_"
@@ -27,7 +27,7 @@ if command -v wills_supper_hacky_guard_alias > /dev/null 2>&1; then
     secho "WARNING: resourcing will.aliases is expermental"
     resource=1
     # Keep count of resources for debug. TODO: OK in DASH, test on busbybox/ASH?
-    alias wills_supper_hacky_guard_alias="echo $(($( wills_supper_hacky_guard_alias )+1))"
+    alias wills_supper_hacky_guard_alias="echo $(($(wills_supper_hacky_guard_alias) + 1))"
   else
     secho "Not re-sourcing will.alises"
     return 0
@@ -41,12 +41,14 @@ fi
 
 # Try to find the path of the alias file (unless we're resourcing)
 if ! resourcing; then
-  if [ -f "$underscore" ]; then
-    aliasfilepath="$( readlink -f "$underscore" )"
+  if [ -f "$underscore" ] && [ "${understore%.aliases}" != "$underscore" ]; then
+    aliasfilepath="$(readlink -f "$underscore")"
   elif [ -f "$HOME/mystuff/home/will.aliases" ]; then
-    aliasfilepath="$( readlink -f "$HOME/mystuff/home/will.aliases" )"
+    aliasfilepath="$(readlink -f "$HOME/mystuff/home/will.aliases")"
+  elif [ -f "$HOME/git/mystuff/home/will.aliases" ]; then
+    aliasfilepath="$(readlink -f "$HOME/git/mystuff/home/will.aliases")"
   else
-    findresult="$( find "$HOME" -name will.aliases )"
+    findresult="$(find "$HOME" -name will.aliases 2> /dev/null)"
     if [ -f "$findresult" ]; then
       aliasfilepath="$findresult"
     else
@@ -63,37 +65,37 @@ thisshell="notfound"
 
 # check if the $$ built-in pid works
 case $$ in
-  ''|*[!0-9]*) pidok=0;;
-            *) [ $$ -gt 0 ] && pidok=1 || pidok=0;;
+  '' | *[!0-9]*) pidok=0 ;;
+  *) [ $$ -gt 0 ] && pidok=1 || pidok=0 ;;
 esac
 
 # if it works copy to our own variable, otherwise try sh's ps
 if [ $pidok -eq 1 ]; then
   mypid=$$
 else
-  extpid="$( sh -c 'ps -o ppid= -p $$' 2> /dev/null )"
+  extpid="$(sh -c 'ps -o ppid= -p $$' 2> /dev/null)"
   if $? && [ $extpid -gt 0 ]; then
     mypid=$extpid
-    pidok=1;
+    pidok=1
   fi
 fi
 
 # Now, waterfall through pid-based options to trying to grok $0
 # TODO: any more to add? most others seem to be based on validity of built-ins
 if [ $pidok -eq 1 ] && [ -f "/proc/$mypid/exe" ]; then
-  shellpath="$( readlink -f /proc/$mypid/exe )"
+  shellpath="$(readlink -f /proc/$mypid/exe)"
   thisshell="${shellpath##*/}"
-elif [ $pidok -eq 1 ] && shellps="$( ps -o command= -p $mypid )"; then
+elif [ $pidok -eq 1 ] && shellps="$(ps -o command= -p $mypid)"; then
   # strip bash starting -, anything else?
   thisshell="${shellps##-}"
 else
   case "$0" in
-    busybox) thisshell="busybox";;
-      *bash) thisshell="bash";;
-       zsh*) thisshell="zsh";;
-       dash) thisshell="dash";;
-        ash) thisshell="ash";;
-         sh) thisshell="POSIX";;
+    busybox) thisshell="busybox" ;;
+    *bash) thisshell="bash" ;;
+    zsh*) thisshell="zsh" ;;
+    dash) thisshell="dash" ;;
+    ash) thisshell="ash" ;;
+    sh) thisshell="POSIX" ;;
   esac
 fi
 
@@ -125,7 +127,8 @@ fi
 is_wsl=0
 
 # WSL detection is easiest through uname
-if [ `uname -r`="*Microsoft" ]; then
+uname_result=$(uname -r)
+if [ "${uname_result%Microsoft}" != "$uname_result" ]; then
   is_wsl=1
 fi
 
@@ -177,8 +180,7 @@ if ! resourcing; then
 
   # nano -> pico -> vi(m) waterfall
   if ! command -v 'nano' > /dev/null 2>&1; then
-    if command -v 'pico' > /dev/null 2>&1
-    then
+    if command -v 'pico' > /dev/null 2>&1; then
       alias nano='pi\co -w'
     else
       alias nano='vim'
@@ -207,8 +209,6 @@ if ! d\u -h /dev/console > /dev/null 2>&1; then
     alias du='du -h'
   fi
 fi
-
-
 
 # same for df (though -h seems more common)
 if ! d\f -h / > /dev/null 2>&1; then
@@ -240,7 +240,7 @@ fi
 
 if [ $useexternalcase -eq 1 ]; then
   # Not all typeset commands have the -l switch
-  typesettest="$( typeset -l 'TEST' )" > /dev/null 2>&1
+  typesettest="$(typeset -l 'TEST')" > /dev/null 2>&1
   if [ $? -eq 0 ] && [ "test" = "$typesettest" ]; then
     secho "setting lc/uc using typset"
     alias setlc='lc="typeset -l"'
@@ -316,10 +316,10 @@ alias l='ll'
 ################################################################################
 # For a summary of my research on this see ../documental/commandsearch.md
 # Leave the which binary accessable (if it is a binary)
-if [ -x "$( command -v 'which' )" ]; then
-  alias whichbin="$( command -v 'which' )"
+if [ -x "$(command -v 'which')" ]; then
+  alias whichbin="$(command -v 'which')"
 # or try to find the binary if a builtin is hiding it
-elif command -v whichfinder.sh > /dev/null 2>&1 && tmpwhichpath="$( whichfinder.sh )"; then
+elif command -v whichfinder.sh > /dev/null 2>&1 && tmpwhichpath="$(whichfinder.sh)"; then
   alias whichbin="$tmpwhichpath"
 fi
 
@@ -411,28 +411,25 @@ alias cp='cp -a'
 # note: this is mostly for functions... I don't use pushd and expect cd to push
 if [ $dirstack = "present" ]; then
   # Tell pushd to shut the hell up (but allow errors)
-  pushd () {
+  pushd() {
     command pushd $* > /dev/null
   }
 elif [ $dirstack = "missing" ]; then
   # just alias it to cd
-  pushd () {
+  pushd() {
     command cd $*
   }
 fi
 
 # smart CD to the path containing a file if file given
 cd() {
-  if [ -z $1 ]
-  then
+  if [ -z $1 ]; then
     # no arguments has a different default meaning to pushd, but we still want the cd behavior
     # TODO: check if this has any issue for ZSH (autopushd)
     pushd ~
-  elif [ -z $2 ]
-  then
-    if [ -f $1 ]
-    then
-      pushd `dirname $1`
+  elif [ -z $2 ]; then
+    if [ -f $1 ]; then
+      pushd $(dirname $1)
     else
       pushd $1
     fi
@@ -446,30 +443,31 @@ cd() {
 # Note: cdl can be "odd" when the path is a link etc. since it needs to use
 #       readlink to get the full path. This could be made better by path-parsing,
 #       but I'm too lazy to figure out how to make that portable
-cdl () {
-  local file=`readlink -f $1`
+cdl() {
+  local file=$(readlink -f $1)
   cd $1
   less $file
 }
 
 #mkcd=mkdir then CD (doesn't need smart CD since we just made the directory)
-mkcd () {
+mkcd() {
   mkdir "$@"
   pushd "$@"
 }
 
 # grpdiff
-grpdiff () {
+grpdiff() {
   echo "< them only, > you only\n-----------------------"
   groups $1 | tr \  \\n | tail +3 | sort > /tmp/group_compare.$$.left
   groups | tr \  \\n | sort > /tmp/group_compare.$$.right
-  diff /tmp/group_compare.$$.left /tmp/group_compare.$$.right | grep -v '\-\-\-' | grep -v '^[0-9,acd]\+'; rm /tmp/group_compare.$$.*
+  diff /tmp/group_compare.$$.left /tmp/group_compare.$$.right | grep -v '\-\-\-' | grep -v '^[0-9,acd]\+'
+  rm /tmp/group_compare.$$.*
 }
 
 # smart background remove
-rmr () {
+rmr() {
   mkdir tombstone > /dev/null 2>&1
-  local tombstone=`readlink -f tombstone`
+  local tombstone=$(readlink -f tombstone)
   if [ ! -d "$tombstone" ]; then
     echo "ERROR: tombstone creation failed"
     return 1
@@ -483,11 +481,9 @@ rmr () {
 # dua (du all): use a loop to prevent globbing errors on the pickier shells
 # finally, we want to avoid using du on certain dirs (most notably snapshots)
 # and can't be sure the exclude alias will work
-dua () {
-  for x in .[!.]* ..?* *
-  do
-    if [ -e $x && $x != ".snapshot/" ]
-    then
+dua() {
+  for x in .[!.]* ..?* *; do
+    if [ -e $x && $x != ".snapshot/" ]; then
       du -sx $x
     fi
   done
@@ -497,25 +493,25 @@ dua () {
 # We don't re-do this on resource (it's been stable, simple enough to manually re-do)
 if ! resourcing; then
   if command -v 'gitk' > /dev/null 2>&1; then
-    gitk () {
+    gitk() {
       command gitk $* &
     }
   fi
 
   if command -v 'kate' > /dev/null 2>&1; then
-    kate () {
+    kate() {
       command kate $* &
     }
   fi
 
   if command -v 'gedit' > /dev/null 2>&1; then
-    gedit () {
+    gedit() {
       command gedit $* &
     }
   fi
 
   if command -v 'gvim' > /dev/null 2>&1; then
-    gvim () {
+    gvim() {
       command gvim $* &
     }
   fi
@@ -523,8 +519,8 @@ fi
 
 # gitignore.io
 # comma (no space) separated list of templates
-gi () {
-  curl -sLw "\n" https://www.gitignore.io/api/$@ ;
+gi() {
+  curl -sLw "\n" https://www.gitignore.io/api/$@
 }
 
 ################################################################################

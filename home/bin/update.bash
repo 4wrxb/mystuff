@@ -9,13 +9,18 @@ fi
 # Package Manger Updates
 if command -v 'apt' > /dev/null 2>&1; then
   echo "apt"
-  sudo apt update; sudo apt upgrade; sudo apt autoremove
+  sudo apt update
+  sudo apt upgrade
+  sudo apt autoremove
 elif command -v 'aptitude' > /dev/null 2>&1; then
   echo "aptitude"
-  sudo aptitude update; sudo aptitude safe-upgrade
+  sudo aptitude update
+  sudo aptitude safe-upgrade
 elif command -v 'apt-get' > /dev/null 2>&1; then
   echo "apt-get"
-  sudo apt-get update; sudo apt-get upgrade; sudo apt-get autoremove
+  sudo apt-get update
+  sudo apt-get upgrade
+  sudo apt-get autoremove
 elif command -v 'yum' > /dev/null 2>&1; then
   echo "yum"
   sudo yum upgrade
@@ -42,5 +47,4 @@ if command -v 'dpkg' > /dev/null 2>&1; then
     echo "cleaning up godeb packages"
     rm /tmp/go_*.deb > /dev/null 2>&1
   fi
-fi    
-
+fi

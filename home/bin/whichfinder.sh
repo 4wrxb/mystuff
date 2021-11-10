@@ -14,4 +14,3 @@ while :; do
   [ "${parsepath%%:*}" = "$next" ] && exit 1
   parsepath="$next"
 done
-

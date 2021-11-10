@@ -10,7 +10,7 @@ while :; do
         shift
       else
         printf 'ERROR: word switch %s must be followed by an argument.\n' ${1#--}
-        errorcount=$((errorcount+1))
+        errorcount=$((errorcount + 1))
       fi
       ;;
     -*)
@@ -18,7 +18,7 @@ while :; do
         printf '  single letter switch "%s"\n' ${1#-}
       else
         printf 'ERROR: single letter switch "%s" is not a single letter.\n' ${1#-}
-        errorcount=$((errorcount+1))
+        errorcount=$((errorcount + 1))
       fi
       ;;
     -?*)
@@ -30,7 +30,7 @@ while :; do
         break
       else
         printf 'ERROR: unexected non-switch argument "%s".\n' $1
-        errorcount=$((errorcount+1))
+        errorcount=$((errorcount + 1))
       fi
       ;;
   esac

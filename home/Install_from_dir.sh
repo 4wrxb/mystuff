@@ -18,12 +18,12 @@ if [ -d $HOME/.ssh ]; then
   echo "Moving existing .ssh to .ssh.old"
   m\v $HOME/.ssh $HOME/.ssh.old
   # work key gits put first in the boot-strap process. Move that back.
-  if [ -f $HOME/.ssh.old/$USER.openSSH ]
+  if [ -f $HOME/.ssh.old/$USER.openSSH ]; then
     m\v $HOME/.ssh.old/$USER.openSSH $HOME/.ssh/
   fi
 fi
-cppath=`which cp`
-if [ `readlink -f $cppath | grep "busybox"` ]; then
+cppath=$(which cp)
+if [ $(readlink -f $cppath | grep "busybox") ]; then
   echo "busybox detected, doing simple cp, check ownership/perms of copied files"
   c\p -iR .ssh $HOME/
 else
@@ -54,10 +54,11 @@ fi
 ##############################
 # WSL-specific changes
 ##############################
-#if [ `uname -r`="*Microsoft" ]
-#then
+uname_result=$(uname -r)
+if [ "${uname_result%Microsoft}" != "$uname_result" ]; then
   echo "Making WSL speicfic changes"
-#fi
+  ./Install_wsl_software.sh
+fi
 
 ##############################
 # Now run the injector for includes

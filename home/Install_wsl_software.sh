@@ -5,7 +5,8 @@
 
 # TODO: compare vs personal WSL setup
 
-if [ ! `uname -r`="*Microsoft" ]; then
+uname_result=$(uname -r)
+if [ "${uname_result%Microsoft}" = "$uname_result" ]; then
   echo "ERROR: this script is intended for WSL only."
   exit 1
 fi

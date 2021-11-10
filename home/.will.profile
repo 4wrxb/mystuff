@@ -1,19 +1,20 @@
 # ~/.will.profile: Cross-platform options for login shells...
 
-secho () {
+secho() {
   case $- in
-    *i*) echo "$@";;
-      *) return 1;;
+    *i*) echo "$@" ;;
+    *) return 1 ;;
   esac
 }
 
 secho "running .will.profile"
 
-if [ $( uname -r )="*Microsoft" ]; then
+uname_result=$(uname -r)
+if [ "${uname_result%Microsoft}" != "$uname_result" ]; then
   # winhome link
   tmp_winuser=$USER
   tmp_newln=1
-  if [ -h "${HOME}/winhome" ]; then #Existing link
+  if [ -h "${HOME}/winhome" ]; then   #Existing link
     if [ -d "${HOME}/winhome" ]; then #Link is to valid dir
       tmp_newln=0
     else
@@ -23,8 +24,8 @@ if [ $( uname -r )="*Microsoft" ]; then
   if [ $tmp_newln -eq 1 ] && ! [ -d "/mnt/c/Users/${tmp_winuser}" ]; then
     tr '[A-Z]' '[a-z]' < $tmp_winuser
     if ! [ -d "/mnt/c/Users/${tmp_winuser}" ]; then
-# FIXME: this contains bashisms
-#      tmp_winuser="$(tr '[a-z]' '[A-Z]' <<< ${tmp_winuser:0:1})${tmp_winuser:1}"
+      # FIXME: this contains bashisms
+      #      tmp_winuser="$(tr '[a-z]' '[A-Z]' <<< ${tmp_winuser:0:1})${tmp_winuser:1}"
       tmp_winuser=will
       if ! [ -d "/mnt/c/Users/${tmp_winuser}" ]; then
         tmp_newln=0
@@ -37,7 +38,7 @@ if [ $( uname -r )="*Microsoft" ]; then
 fi
 
 # Use this for where we come from
-mystuffpath="$( readlink -f `dirname $BASH_SOURCE[0]` )"
+mystuffpath="$(readlink -f $(dirname $BASH_SOURCE[0]))"
 
 # Add the go path first
 if [ -d "$HOME/go/bin" ]; then
@@ -62,4 +63,3 @@ fi
 if [ -f "$HOME/workstuff/wsl/work_env" ]; then
   . "$HOME/workstuff/wsl/work_env"
 fi
-

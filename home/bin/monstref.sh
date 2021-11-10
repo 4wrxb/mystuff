@@ -2,8 +2,8 @@
 # Inspired by https://randyfay.com/content/reference-cache-repositories-speed-clones-git-clone-reference
 # and https://www.drupal.org/sandbox/mfer/1074256
 
-show_help () {
-echo 'monstref.sh
+show_help() {
+  echo 'monstref.sh
 Creates a reference repository for all projects specified in $myprojects from $GIT_REPOS/$proj combined in $TA/monstref.
 
 - $GIT_REPOS is the base of a git repository path with optional protocols/username etc..
@@ -42,7 +42,7 @@ Optional switches:
     Causes the script to ignore $TA and $TMPDIR and uses the provided path instead.
 '
 
-#TODO: details on usage with git?
+  #TODO: details on usage with git?
 
 }
 
@@ -56,11 +56,11 @@ tmparea="$TA"
 
 while :; do
   case $1 in
-    -h|-\?|--help)
+    -h | -\? | --help)
       show_help
       exit
       ;;
-    -s|--subdir)
+    -s | --subdir)
       if [ -n "$2" ]; then
         repopath=$2
         shift
@@ -69,10 +69,10 @@ while :; do
         exit 1
       fi
       ;;
-    -e|--evalok)
+    -e | --evalok)
       evalok=1
       ;;
-    -p|--projects)
+    -p | --projects)
       if [ -n "$2" ]; then
         projects=$2
         shift
@@ -81,7 +81,7 @@ while :; do
         exit 1
       fi
       ;;
-    -b|--base)
+    -b | --base)
       if [ -n "$2" ]; then
         base=$2
         shift
@@ -90,7 +90,7 @@ while :; do
         exit 1
       fi
       ;;
-    -t|--tmparea)
+    -t | --tmparea)
       if [ -n "$2" ]; then
         tmparea=$2
         shift
@@ -104,6 +104,7 @@ while :; do
       ;;
     *)
       break
+      ;;
   esac
 
   shift
@@ -126,13 +127,16 @@ else
   if [ $evalok -ne 1 ]; then
     while :; do
       # TODO: move this all to a printf, but for now just make sure repopath is safe
-      echo   "WARNING: provided subdir argument will be expanded **USING EVAL**. This can be dangerous if contents are unsafe."
+      echo "WARNING: provided subdir argument will be expanded **USING EVAL**. This can be dangerous if contents are unsafe."
       printf '         subdir is set to: %s\n' "$repopath"
-      echo   '         does this look safe (a relative path with $proj in it)? [y/n]'
+      echo '         does this look safe (a relative path with $proj in it)? [y/n]'
       read yn
       case $yn in
-        Yes | yes | y | Y ) break;;
-          No | no | n | N ) echo "Canceled"; exit 1;;
+        Yes | yes | y | Y) break ;;
+        No | no | n | N)
+          echo "Canceled"
+          exit 1
+          ;;
       esac
     done
   fi
@@ -140,9 +144,9 @@ else
 fi
 
 proj="test1"
-testpath="$( repoexp )"
+testpath="$(repoexp)"
 proj="test2"
-if [ "$testpath" = "$( repoexp )" ]; then
+if [ "$testpath" = "$(repoexp)" ]; then
   echo 'ERROR: subdir option does not vary with changes to loop variable $proj, this script will not work'
   exit 1
 fi
@@ -160,8 +164,11 @@ if [ -z "$tmparea" ]; then
     echo "Continue? [y/n]"
     read yn
     case $yn in
-      Yes | yes | y | Y ) break;;
-        No | no | n | N ) echo "Canceled"; exit 1;;
+      Yes | yes | y | Y) break ;;
+      No | no | n | N)
+        echo "Canceled"
+        exit 1
+        ;;
     esac
   done
 fi
@@ -190,23 +197,22 @@ if ! git rev-parse --git-dir > /dev/null 2>&1; then
 fi
 
 # Loop through projects
-for proj in $( echo $projects ); do
+for proj in $(echo $projects); do
   if grep -q "\[ *remote *.$proj" config; then
     # If the project isn't in the remote do nothing at this point, but warn we don't update the reference url.
     printf 'WARNING: %s reference already exists. It will be updated, but the url is NOT checked or updated.\n' "$proj"
   else
     # A big compare is done when adding the reference and fetching, unelss it's a bare repo. So clone bare and add that.
     echo "Adding $proj to monstref via bare clone."
-    if git clone --bare "$base/$( repoexp )" "$tmparea/.monstreftmp/$proj"; then
+    if git clone --bare "$base/$(repoexp)" "$tmparea/.monstreftmp/$proj"; then
       # Unlike the drupal code the if is more complicated, just fetch as each is added.
       git remote add -f $proj "$tmparea/.monstreftmp/$proj"
-      git remote set-url $proj "$base/$( repoexp )"
+      git remote set-url $proj "$base/$(repoexp)"
     else
-      echo "ERROR: failed to add $proj, clone of $base/$( repoexp ) failed. Details are probably above."
+      echo "ERROR: failed to add $proj, clone of $base/$(repoexp) failed. Details are probably above."
     fi
   fi
 done
 
 echo "Fetching all repos to initialize new projects and update existing ones."
 git fetch --all
-
