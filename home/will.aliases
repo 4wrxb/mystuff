@@ -128,7 +128,7 @@ is_wsl=0
 
 # WSL detection is easiest through uname
 uname_result=$(uname -r)
-if [ "${uname_result%Microsoft}" != "$uname_result" ]; then
+if [ "${uname_result%icrosoft*}" != "$uname_result" ]; then
   is_wsl=1
 fi
 

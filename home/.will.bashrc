@@ -14,7 +14,7 @@ secho "running .will.bashrc"
 # WSL-specific settings
 ##############################
 uname_result=$(uname -r)
-if [ "${uname_result%Microsoft}" != "$uname_result" ]; then
+if [ "${uname_result%icrosoft*}" != "$uname_result" ]; then
   echo "Linux is like if the creator of git wrote an operating system. - @SwiftOnSecurity"
   # Display 0 for the windows x server
   export DISPLAY=localhost:0

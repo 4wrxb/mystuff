@@ -10,7 +10,7 @@ secho() {
 secho "running .will.profile"
 
 uname_result=$(uname -r)
-if [ "${uname_result%Microsoft}" != "$uname_result" ]; then
+if [ "${uname_result%icrosoft*}" != "$uname_result" ]; then
   # winhome link
   tmp_winuser=$USER
   tmp_newln=1
