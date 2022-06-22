@@ -39,7 +39,20 @@ fi
 
 # Use this for where we come from
 mystuffpath="$(readlink -f $(dirname $BASH_SOURCE[0]))"
+secho "mystuff is here: $mystuffpath"
 
+##############################
+# SSH-AGENT
+##############################
+# From git-for-windows documentation this seems to be more universal than other linux suggestions
+case $- in
+  *i*) source $mystuffpath/launch_ssh_agent.sh ;;
+  *) ;;
+esac
+
+##############################
+# PATH
+##############################
 # Add the go path first
 if [ -d "$HOME/go/bin" ]; then
   PATH="$HOME/go/bin":$PATH
@@ -55,6 +68,9 @@ if [ -d "$HOME/bin" ]; then
   PATH="$HOME/bin":$PATH
 fi
 
+##############################
+# OTHER ENV
+##############################
 # Source aliases last (so they have the full path etc.)
 if [ -f "${mystuffpath}/will.aliases" ]; then
   . "${mystuffpath}/will.aliases"

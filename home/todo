@@ -2,10 +2,13 @@ use detached working dir method for this, especially to pick up .config
 git prefs?
 
 bootstrap setup (WIP, see WSL_install.md in documental which includes TODO)
+bootstrap/notes for WSL & Crostini
 beef up custom bashrc and profiles
+crostini stuff
 screen/tmux
-zsh
+zsh configs
 godevel general script (see documental/godevel.md)
+remove/reduce dependence on "cd" in various install scripts
 vim
   - colors still off?
   - atomize insert mode on newline
@@ -14,7 +17,7 @@ vim
 csh alias file carry-over?
 
 bash/zsh
-  - enable alt+p
+  - enable alt+p?
 
 perl: use perlbrew for wsl install and update.bash
 
