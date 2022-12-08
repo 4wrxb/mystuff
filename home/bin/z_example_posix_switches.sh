@@ -4,6 +4,12 @@ errorcount=0
 
 while :; do
   case $1 in
+    --)
+      printf '  break switch, no more to process'
+      shift
+      set remaining_args = "$@"
+      break
+      ;;
     --*)
       if [ -n "$2" ] && [ "$2" = "${2#-}" ]; then
         printf '  word switch "%s" followed by argument "%s".\n' ${1#--} $2

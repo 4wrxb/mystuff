@@ -1,0 +1,10 @@
+
+# Check file example
+# Causes rule to be re-run if the entire make was killed
+# IMPORTANT - note that $@ is going to change to the check file
+$(ORIGINAL_TARGET): $(ORIGINAL_TARGET).check
+$(ORIGINAL_TARGET).check: $(ORIGINAL_SRCS)
+	[ ! -f $@ ] || rm $@
+	[ ! -f $(ORIGINAL_TARGET) ] || rm $(ORIGINAL_TARGET)
+	$(BUILD_TOOL) $< > $(ORIGINAL_TARGET)
+	touch $@

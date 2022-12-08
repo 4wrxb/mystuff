@@ -481,6 +481,7 @@ rmr() {
 # dua (du all): use a loop to prevent globbing errors on the pickier shells
 # finally, we want to avoid using du on certain dirs (most notably snapshots)
 # and can't be sure the exclude alias will work
+# TODO: look into portability of d & excludes switch: du -hxd 1 --exclude=.snapshot
 dua() {
   for x in .[!.]* ..?* *; do
     if [ -e $x && $x != ".snapshot/" ]; then
