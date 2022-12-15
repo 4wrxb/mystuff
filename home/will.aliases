@@ -143,7 +143,6 @@ unset thisshell
 ################################################################################
 # Portability stuff                           should be before almost everything
 ################################################################################
-
 # keep dirstack stuff where it is
 if resourcing; then
   # The only portable way is to unset this (it's always a function) and re-detect
@@ -210,8 +209,10 @@ if ! d\u -h /dev/console > /dev/null 2>&1; then
   fi
 fi
 
-# same for df (though -h seems more common)
-if ! d\f -h / > /dev/null 2>&1; then
+# same for df (though -h seems more common) OR DISABLE FOR WSL (just hangs)
+if [ $is_wsl -eq 1]; then
+  alias df='echo "df Disabled in WSL"
+elif ! d\f -h / > /dev/null 2>&1; then
   alias df='df -h'
 fi
 
