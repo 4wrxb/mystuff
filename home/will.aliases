@@ -23,8 +23,8 @@ resourcing() {
 underscore="$_"
 
 if command -v wills_supper_hacky_guard_alias > /dev/null 2>&1; then
-  if [ "x$1" = "x-f" ] || [ $will_enable_alias_resource -eq 1 ]; then
-    secho "WARNING: resourcing will.aliases is expermental"
+  if [ "x$1" = "x-f" ] || ([ -n "$will_enable_alias_resource" ] && [ $will_enable_alias_resource -eq 1 ]); then
+    secho "WARNING: resourcing will.aliases is experimental"
     resource=1
     # Keep count of resources for debug. TODO: OK in DASH, test on busbybox/ASH?
     alias wills_supper_hacky_guard_alias="echo $(($(wills_supper_hacky_guard_alias) + 1))"
@@ -211,7 +211,7 @@ fi
 
 # same for df (though -h seems more common) OR DISABLE FOR WSL (just hangs)
 if [ $is_wsl -eq 1]; then
-  alias df='echo "df Disabled in WSL"
+  alias df='echo "df Disabled in WSL"'
 elif ! d\f -h / > /dev/null 2>&1; then
   alias df='df -h'
 fi
