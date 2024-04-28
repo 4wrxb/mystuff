@@ -1,4 +1,8 @@
+[include]
+	# Does not work until 2.13
+	path = .gitconfig.common
 [push]
+	# Default as of 2.0 - but sometimes we end up with old versions
 	default = simple
 [user]
 	name = Will O
