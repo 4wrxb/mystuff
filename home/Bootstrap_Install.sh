@@ -50,6 +50,8 @@ git clone https://github.com/4wrxb/mystuff.git "$HOME"/mystuff
 cd "$HOME"/mystuff || exit 1
 git remote set-url origin git@github.com:4wrxb/mystuff.git
 
+# TODO: supmodule initialization
+
 # Launch the install-from-dir
 cd "$HOME"/mystuff/home || exit 1
 ./Install_from_dir.sh

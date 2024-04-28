@@ -49,6 +49,32 @@ else
 fi
 
 ##############################
+# Conifg Links
+##############################
+# vim
+if [ -f "$HOME"/.vimrc ]; then
+  echo ".vimrc exists - NOT updating"
+else
+  \ln -s .vimrc "$HOME"/.vimrc
+fi
+
+# tmux
+if [ -f "$HOME"/.tmux.conf ]; then
+  echo ".tmux.conf exists, moving to to .tmux.conf.orig, suggest merging into .tmux.conf.local"
+  \mv "$HOME"/.tmux.conf "$HOME"/.tmux.conf.orig
+fi
+
+if [ -f "$HOME"/.tmux.conf.local ]; then
+  echo ".tmux.conf.local exists, moving to .tmux.conf.local.orig, suggest mergining into .tmux.conf.local"
+fi
+
+\ln -s .tmux.conf "$HOME"/.tmux.conf
+\ln -s .tmux.conf.user "$HOME"/.tmux.user
+# TODO: smarter way of doing this?
+echo 'ACTION REQUIRED: link the appropriate mystuff/home/.tmux.conf.local.* to .tmux.conf.local'
+echo '                 or make a new copy for mystuff/home/.tmux.conf.local.template'
+
+##############################
 # WSL-specific changes
 ##############################
 uname_result=$(uname -r)

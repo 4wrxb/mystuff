@@ -1,0 +1,108 @@
+# My univeral settings
+# Note that .tmux.conf is not parsing this file for functions like it does .tmux.conf.local - all functions must still be there
+
+# TODO:
+# Update things for how tmux handles panes, some ideas:
+# - name panes, display window name as the active pane
+# - use old(shift+F6/F7 for moving/combining panes into other windows (since this is typicall how I am dealing with panes)
+# - Pane nave is already the case with C-b, could use something else for resize ?
+
+# -- Basic configs -----------------------------------------
+# History Limit
+set -g history-limit 10000
+
+# Disable additional prefix - I want ctrl+a for command lines
+set -gu prefix2 
+unbind C-a
+
+# Disable auto-rename and numbering
+# Note: reloading config will flick these on & off - only affects name
+set -g automatic-rename off
+set -g renumber-windows off
+
+# TODO: wheel scroll-back support when mouse is disabled?
+
+# -- Status bars -------------------------------------------
+# My 2nd-line line is fixed help text for bind keys
+set-option -g status 2
+set -g status-format[1] '#[align=centre]F-Keys (Shift+F1 for more): #[fg=white#,bg=black] [ escape F-Key | rename window | previous window | select window + # ] #[fg=black#,bg=white] [ new window | copy mode | left window | right window ] #[fg=white#,bg=black] [ add pane below | add pane right | copy mode | new window ]'
+# Extended help (will bind this later)
+set -F @shifthelp "#[align=centre]Shift + F-Keys: #[fg=black#,bg=white] [ help |    | list windows | set window + # ] #[fg=white#,bg=black] [    |    | window #1 | window #99 ] #[fg=black#,bg=white] [    |    |    |   ]"
+
+# -- Bind Keys ---------------------------------------------
+
+# Main root binidings - function keys
+bind -n F1 switchc -Tnotable
+bind -n F2 command-prompt -I "#W" { rename-window "%%" }
+bind -n F3 last
+bind -n F4 switchc -Tsel
+bind -n F5 neww
+bind -n F6 copy-mode
+bind -n F7 prev
+bind -n F8 next
+bind -n F9 splitw -v -c "#{pane_current_path}"
+bind -n F10 splitw -h -c "#{pane_current_path}"
+bind -n F11 copy-mode
+bind -n F12 neww
+
+bind -n S-F1 display -d 10000 '#{@shifthelp}'
+# F2 tbd - name sessions?
+bind -n S-F3 choose-tree -Zw
+bind -n S-F4 switchc -Tmov
+# F5 & F6 to do - pane options?
+bind -n S-F7 selectw -t :=1
+bind -n S-F8 selectw -t :=99
+
+# Additional Tables
+# Notable - escapes all keys
+# Any is a special bind to all (unbound) keys in table, send will forward to the active pane
+bind -Tnotable any send
+
+# Select window
+bind -Tsel 1 selectw -t :=1
+bind -Tsel 2 selectw -t :=2
+bind -Tsel 3 selectw -t :=3
+bind -Tsel 4 selectw -t :=4
+bind -Tsel 5 selectw -t :=5
+bind -Tsel 6 selectw -t :=6
+bind -Tsel 7 selectw -t :=7
+bind -Tsel 0 selectw -t :=10
+bind -Tsel \! selectw -t :=11
+bind -Tsel \@ selectw -t :=12
+bind -Tsel \# selectw -t :=13
+bind -Tsel \$ selectw -t :=14
+bind -Tsel \% selectw -t :=15
+bind -Tsel \^ selectw -t :=16
+bind -Tsel \& selectw -t :=17
+bind -Tsel \* selectw -t :=18
+bind -Tsel \( selectw -t :=19
+bind -Tsel \) selectw -t :=20
+# Repeating reverts to a prompt - support S-F4 and F4 to avoid weird cross isues
+bind -Tsel F4 command-prompt -T window-target -p "Select Window" { selectw -t ":%%" }
+bind -Tsel S-F4 command-prompt -T window-target -p "Select Window" { selectw -t ":%%" }
+
+# Set window number (smart mov/swap)
+# Does not seem to be a way to merge this for select and renumbering windows
+bind -Tmov 1 if-shell -b '$TMUX_PROGRAM list-windows | cut -d: -f1 | grep 1' { swapw -d -t :1 } { movew -t :1 }
+bind -Tmov 2 if-shell -b '$TMUX_PROGRAM list-windows | cut -d: -f1 | grep 2' { swapw -d -t :2 } { movew -t :2 }
+bind -Tmov 3 if-shell -b '$TMUX_PROGRAM list-windows | cut -d: -f1 | grep 3' { swapw -d -t :3 } { movew -t :3 }
+bind -Tmov 4 if-shell -b '$TMUX_PROGRAM list-windows | cut -d: -f1 | grep 4' { swapw -d -t :4 } { movew -t :4 }
+bind -Tmov 5 if-shell -b '$TMUX_PROGRAM list-windows | cut -d: -f1 | grep 5' { swapw -d -t :5 } { movew -t :5 }
+bind -Tmov 6 if-shell -b '$TMUX_PROGRAM list-windows | cut -d: -f1 | grep 6' { swapw -d -t :6 } { movew -t :6 }
+bind -Tmov 7 if-shell -b '$TMUX_PROGRAM list-windows | cut -d: -f1 | grep 7' { swapw -d -t :7 } { movew -t :7 }
+bind -Tmov 8 if-shell -b '$TMUX_PROGRAM list-windows | cut -d: -f1 | grep 8' { swapw -d -t :8 } { movew -t :8 }
+bind -Tmov 9 if-shell -b '$TMUX_PROGRAM list-windows | cut -d: -f1 | grep 9' { swapw -d -t :9 } { movew -t :9 }
+bind -Tmov 0 if-shell -b '$TMUX_PROGRAM list-windows | cut -d: -f1 | grep 10' { swapw -d -t :10 } { movew -t :10 }
+bind -Tmov \! if-shell -b '$TMUX_PROGRAM list-windows | cut -d: -f1 | grep 11' { swapw -d -t :11 } { movew -t :11 }
+bind -Tmov \@ if-shell -b '$TMUX_PROGRAM list-windows | cut -d: -f1 | grep 12' { swapw -d -t :12 } { movew -t :12 }
+bind -Tmov \# if-shell -b '$TMUX_PROGRAM list-windows | cut -d: -f1 | grep 13' { swapw -d -t :13 } { movew -t :13 }
+bind -Tmov \$ if-shell -b '$TMUX_PROGRAM list-windows | cut -d: -f1 | grep 14' { swapw -d -t :14 } { movew -t :14 }
+bind -Tmov \% if-shell -b '$TMUX_PROGRAM list-windows | cut -d: -f1 | grep 15' { swapw -d -t :15 } { movew -t :15 }
+bind -Tmov \^ if-shell -b '$TMUX_PROGRAM list-windows | cut -d: -f1 | grep 16' { swapw -d -t :16 } { movew -t :16 }
+bind -Tmov \& if-shell -b '$TMUX_PROGRAM list-windows | cut -d: -f1 | grep 17' { swapw -d -t :17 } { movew -t :17 }
+bind -Tmov \* if-shell -b '$TMUX_PROGRAM list-windows | cut -d: -f1 | grep 18' { swapw -d -t :18 } { movew -t :18 }
+bind -Tmov \( if-shell -b '$TMUX_PROGRAM list-windows | cut -d: -f1 | grep 19' { swapw -d -t :19 } { movew -t :19 }
+bind -Tmov \) if-shell -b '$TMUX_PROGRAM list-windows | cut -d: -f1 | grep 20' { swapw -d -t :20 } { movew -t :20 }
+bind -Tmov F4 command-prompt -T target -p "Move Window" { if-shell -b '$TMUX_PROGRAM list-windows | cut -d: -f1 | grep "%1"' { swapw -d -t :"%1" } { movew -t :"%1" } }
+bind -Tmov S-F4 command-prompt -T target -p "Move Window" { if-shell -b '$TMUX_PROGRAM list-windows | cut -d: -f1 | grep "%1"' { swapw -d -t :"%1" } { movew -t :"%1" } }
+
