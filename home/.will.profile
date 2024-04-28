@@ -1,3 +1,5 @@
+#!/bin/false
+# shellcheck shell=sh
 # ~/.will.profile: Cross-platform options for login shells...
 
 secho() {
@@ -22,7 +24,8 @@ if [ "${uname_result%icrosoft*}" != "$uname_result" ]; then
     fi
   fi
   if [ $tmp_newln -eq 1 ] && ! [ -d "/mnt/c/Users/${tmp_winuser}" ]; then
-    tr '[A-Z]' '[a-z]' < $tmp_winuser
+    # shellcheck disable=SC2018,2019 # classes not universally supported
+    tr 'A-Z' 'a-z' < "$tmp_winuser"
     if ! [ -d "/mnt/c/Users/${tmp_winuser}" ]; then
       # FIXME: this contains bashisms
       #      tmp_winuser="$(tr '[a-z]' '[A-Z]' <<< ${tmp_winuser:0:1})${tmp_winuser:1}"
@@ -37,7 +40,8 @@ if [ "${uname_result%icrosoft*}" != "$uname_result" ]; then
   fi
 fi
 
-# Use this for where we come from
+# FIXME: move this to env in the injected includes
+# shellcheck disable=all
 mystuffpath="$(readlink -f $(dirname $BASH_SOURCE[0]))"
 secho "mystuff is here: $mystuffpath"
 
@@ -46,7 +50,7 @@ secho "mystuff is here: $mystuffpath"
 ##############################
 # From git-for-windows documentation this seems to be more universal than other linux suggestions
 case $- in
-  *i*) source $mystuffpath/launch_ssh_agent.sh ;;
+  *i*) . "$mystuffpath"/launch_ssh_agent.sh ;;
   *) ;;
 esac
 

@@ -12,54 +12,50 @@ fi
 ##############################
 # Copy .ssh
 ##############################
-cd "$(dirname "$0")"
+cd "$(dirname "$0")" || exit 1
 # Move the old .ssh out of the way. TODO: don't need to do this if the only thing there is the work key (or empty)
-if [ -d $HOME/.ssh ]; then
+if [ -d "$HOME"/.ssh ]; then
   echo "Moving existing .ssh to .ssh.old"
-  m\v $HOME/.ssh $HOME/.ssh.old
-  # work key gits put first in the boot-strap process. Move that back.
-  if [ -f $HOME/.ssh.old/$USER.openSSH ]; then
-    m\v $HOME/.ssh.old/$USER.openSSH $HOME/.ssh/
+  \mv "$HOME"/.ssh "$HOME"/.ssh.old
+  # work key gets put first in the boot-strap process. Move that back.
+  if [ -f "$HOME"/.ssh.old/"$USER".openSSH ]; then
+    \mv "$HOME"/.ssh.old/"$USER".openSSH "$HOME"/.ssh/
   fi
 fi
 cppath=$(which cp)
-if [ $(readlink -f $cppath | grep "busybox") ]; then
+# TODO: better test
+if readlink -f "$cppath" | grep -q "busybox"; then
   echo "busybox detected, doing simple cp, check ownership/perms of copied files"
-  c\p -iR .ssh $HOME/
+  \cp -iR .ssh "$HOME"/
 else
-  c\p -viR --no-preserve=ownership .ssh $HOME/
+  \cp -viR --no-preserve=ownership .ssh "$HOME"/
 fi
 
 ##############################
 # Copy .gitconfig but don't overwrite
 ##############################
-cd "$(dirname "$0")"
-cppath=`which cp`
-if [ `readlink -f $cppath | grep "busybox"` ]
-then
+# TODO: better test
+if readlink -f "$cppath" | grep -q "busybox"; then
   echo "busybox detected, doing simple cp, check ownership/perms of copied files"
-  c\p -i .gitconfig $HOME/.gitconfig.new
+  \cp -i .gitconfig "$HOME"/.gitconfig.new
 else
-  c\p -vi --no-preserve=ownership .gitconfig $HOME/.gitconfig.new
+  \cp -vi --no-preserve=ownership .gitconfig "$HOME"/.gitconfig.new
 fi
 
-if [ -f $HOME/.gitconfig ]
-then
+if [ -f "$HOME"/.gitconfig ]; then
   echo ".gitconfig exists, leave .gitconfig.new for manual merge"
 else
-  m\v $HOME/.gitconfig.new $HOME/.gitconfig
+  \mv "$HOME"/.gitconfig.new "$HOME"/.gitconfig
 fi
-
-# TODO: .config (link?)
 
 ##############################
 # WSL-specific changes
 ##############################
-#if [ `uname -r`="*Microsoft" ]
-#then
+uname_result=$(uname -r)
+if [ "${uname_result%icrosoft*}" != "$uname_result" ]; then
   echo "Making WSL speicfic changes"
   . ./Install_wsl_software.sh
-#fi
+fi
 
 ##############################
 # Now run the injector for includes

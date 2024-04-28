@@ -15,19 +15,22 @@ if [ -n "$to_install" ]; then
     echo "Sudo not found, assuming root"
     alias sudo=''
   fi
+fi
 
+# split if so sudo alias works - SC2262
+if [ -n "$to_install" ]; then
   if command -v 'apt' > /dev/null 2>&1; then
     echo "Using apt"
-    sudo apt update && sudo apt install $to_install
+    sudo apt update && sudo apt install "$to_install"
   elif command -v 'aptitude' > /dev/null 2>&1; then
     echo "Using aptitude"
-    sudo aptitude update && sudo aptitude install $to_install
+    sudo aptitude update && sudo aptitude install "$to_install"
   elif command -v 'apt-get' > /dev/null 2>&1; then
     echo "Using apt-get"
-    sudo apt-get update && sudo apt-get install $to_install
+    sudo apt-get update && sudo apt-get install "$to_install"
   elif command -v 'yum' > /dev/null 2>&1; then
     echo "Using yum"
-    sudo yum install $to_install
+    sudo yum install "$to_install"
   else
     echo "Package manager not recognized, please install git and git-crypt and ensure it's in your path"
     exit 1
@@ -37,18 +40,18 @@ if [ -n "$to_install" ]; then
   unalias sudo > /dev/null 2>&1
 fi
 
-# Cloning mystfull using https
+# Cloning mystuff using https
 # FIXME: add option for specifying a branch when running bootstrap
-git clone https://github.com/4wrxb/mystuff.git $HOME/mystuff
+git clone https://github.com/4wrxb/mystuff.git "$HOME"/mystuff
 
 # TODO: git-crypt & SSH key
 
 # Set the origin back to ssh
-cd $HOME/mystuff
+cd "$HOME"/mystuff || exit 1
 git remote set-url origin git@github.com:4wrxb/mystuff.git
 
-# Launch the install-from-dir in a new shell
-cd $HOME/mystuff/home
+# Launch the install-from-dir
+cd "$HOME"/mystuff/home || exit 1
 ./Install_from_dir.sh
 
 echo "DONE: Exit all shells and re-open"

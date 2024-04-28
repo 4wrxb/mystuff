@@ -1,3 +1,7 @@
+#!/bin/false
+# NOT exclusively, but avoid false errors for guarded code (manually flip and check)
+# shellcheck shell=bash
+# shellcheck disable=SC2016 # shfmt uses hard quotes instead of escaping $
 # Will's alias file for all SH-derived shells (SH, ASH, ZSH, BASH, etc.),
 # contains basic stuff for interactive and non-interactive shells
 
@@ -20,18 +24,19 @@ resourcing() {
   [ -z "${resource:+x}" ] && return 1 || return 0
 }
 
+# FIXME: not posix
 underscore="$_"
 
 if command -v wills_supper_hacky_guard_alias > /dev/null 2>&1; then
-  if [ "x$1" = "x-f" ] || ([ -n "$will_enable_alias_resource" ] && [ $will_enable_alias_resource -eq 1 ]); then
+  if [ "$1" = "-f" ] || { [ -n "$will_enable_alias_resource" ] && [ "$will_enable_alias_resource" -eq 1 ]; }; then
     secho "WARNING: resourcing will.aliases is experimental"
     resource=1
     # Keep count of resources for debug. TODO: OK in DASH, test on busbybox/ASH?
+    # shellcheck disable=SC2139,SC2262 # intended for next shell - expansion should be now
     alias wills_supper_hacky_guard_alias="echo $(($(wills_supper_hacky_guard_alias) + 1))"
   else
     secho "Not re-sourcing will.alises"
     return 0
-    exit 0
   fi
 else
   secho "running will.aliases"
@@ -41,7 +46,7 @@ fi
 
 # Try to find the path of the alias file (unless we're resourcing)
 if ! resourcing; then
-  if [ -f "$underscore" ] && [ "${understore%.aliases}" != "$underscore" ]; then
+  if [ -f "$underscore" ] && [ "${underscore%.aliases}" != "$underscore" ]; then
     aliasfilepath="$(readlink -f "$underscore")"
   elif [ -f "$HOME/mystuff/home/will.aliases" ]; then
     aliasfilepath="$(readlink -f "$HOME/mystuff/home/will.aliases")"
@@ -70,11 +75,11 @@ case $$ in
 esac
 
 # if it works copy to our own variable, otherwise try sh's ps
-if [ $pidok -eq 1 ]; then
+if [ "$pidok" -eq 1 ]; then
   mypid=$$
 else
   extpid="$(sh -c 'ps -o ppid= -p $$' 2> /dev/null)"
-  if $? && [ $extpid -gt 0 ]; then
+  if $? && [ "$extpid" -gt 0 ]; then
     mypid=$extpid
     pidok=1
   fi
@@ -82,10 +87,10 @@ fi
 
 # Now, waterfall through pid-based options to trying to grok $0
 # TODO: any more to add? most others seem to be based on validity of built-ins
-if [ $pidok -eq 1 ] && [ -f "/proc/$mypid/exe" ]; then
-  shellpath="$(readlink -f /proc/$mypid/exe)"
+if [ "$pidok" -eq 1 ] && [ -f "/proc/$mypid/exe" ]; then
+  shellpath="$(readlink -f /proc/"$mypid"/exe)"
   thisshell="${shellpath##*/}"
-elif [ $pidok -eq 1 ] && shellps="$(ps -o command= -p $mypid)"; then
+elif [ "$pidok" -eq 1 ] && shellps="$(ps -o command= -p "$mypid")"; then
   # strip bash starting -, anything else?
   thisshell="${shellps##-}"
 else
@@ -106,7 +111,7 @@ is_busybox=0
 
 # grok the resulting shell variable
 if [ "$thisshell" = "notfound" ]; then
-  if [ $pidok -eq 1 ]; then
+  if [ "$pidok" -eq 1 ]; then
     secho "no shell idenified by pid $mypid or command $0"
   else
     secho "no shell idenified, could not find pid, command $0"
@@ -119,6 +124,7 @@ elif [ "$thisshell" = "bash" ]; then
   is_bash=1
 elif [ "$thisshell" = "busybox" ]; then
   secho "will.aliases recognizes busybox"
+  # shellcheck disable=SC2034 # future use
   is_busybox=1
 else
   secho "will.aliases does not have specifics for shell $thisshell"
@@ -180,7 +186,7 @@ if ! resourcing; then
   # nano -> pico -> vi(m) waterfall
   if ! command -v 'nano' > /dev/null 2>&1; then
     if command -v 'pico' > /dev/null 2>&1; then
-      alias nano='pi\co -w'
+      alias nano='\pico -w'
     else
       alias nano='vim'
     fi
@@ -200,9 +206,9 @@ if ! resourcing; then
 fi
 
 # some du's don't have -h (human readable), but default to it if it's there
-if ! d\u -h /dev/console > /dev/null 2>&1; then
+if ! \du -h /dev/console > /dev/null 2>&1; then
   # more don't have --exclude, but use it for snapshot if we can
-  if ! d\u --exclude=.snapshot /dev/console > /dev/null 2>&1; then
+  if ! \du --exclude=.snapshot /dev/console > /dev/null 2>&1; then
     alias du='du -h --exclude=.snapshot'
   else
     alias du='du -h'
@@ -210,9 +216,10 @@ if ! d\u -h /dev/console > /dev/null 2>&1; then
 fi
 
 # same for df (though -h seems more common) OR DISABLE FOR WSL (just hangs)
-if [ $is_wsl -eq 1]; then
+if [ $is_wsl -eq 1 ]; then
+  # shellcheck disable=SC2262 # elif - known limitation of shellcheck
   alias df='echo "df Disabled in WSL"'
-elif ! d\f -h / > /dev/null 2>&1; then
+elif ! \df -h / > /dev/null 2>&1; then
   alias df='df -h'
 fi
 
@@ -223,15 +230,19 @@ fi
 useexternalcase=0
 if [ $is_zsh -eq 1 ]; then
   secho "setting lc/uc for zsh"
+  # shellcheck disable=SC2142 # using alias to define a function
   alias setlc='lc () { echo "${*:l}"; }'
+  # shellcheck disable=SC2142 # using alias to define a function
   alias setuc='uc () { echo "${*:u}"; }'
 elif [ $is_bash -eq 1 ]; then
-  if [ "$BASH_VERSINFO" -lt 4 ]; then
+  if [ "${BASH_VERSINFO[0]}" -lt 4 ]; then
     secho "bash is older than 4, need external case"
     useexternalcase=1
   else
     secho "setting lc/uc for bash 4+"
+    # shellcheck disable=SC2142 # using alias to define a function
     alias setlc='lc () { echo "${@,,}"; }'
+    # shellcheck disable=SC2142 # using alias to define a function
     alias setuc='uc () { echo "${@^^}"; }'
   fi
 else
@@ -241,8 +252,8 @@ fi
 
 if [ $useexternalcase -eq 1 ]; then
   # Not all typeset commands have the -l switch
-  typesettest="$(typeset -l 'TEST')" > /dev/null 2>&1
-  if [ $? -eq 0 ] && [ "test" = "$typesettest" ]; then
+  # shellcheck disable=SC2034 # testing typeset command
+  if (typeset -l 'TEST') > /dev/null 2>&1; then
     secho "setting lc/uc using typset"
     alias setlc='lc="typeset -l"'
     alias setuc='uc="typeset -u"'
@@ -271,13 +282,14 @@ else
 fi
 
 alias screen='screen -xR'
-alias sscreen='unset STY; scre\en'
+alias sscreen='unset STY; \screen'
 
 # assh, even if go/bin isn't in gopath
 # resourcing is OK, we don't actually alias assh
 if command -v 'assh' > /dev/null 2>&1; then
   alias ssh='assh wrapper ssh'
 elif [ -x "$HOME/go/bin/assh" ]; then
+  # shellcheck disable=SC2139 # intentional expansion for full path
   alias ssh="$HOME/go/bin/assh wrapper ssh"
 fi
 
@@ -304,7 +316,7 @@ fi
 # A is all except parent and pwd, F is to append indicators, h uses human readable sizes
 # v is "version" sort and overrides LC (gives back dotfiles first in WSL)
 alias ls='ls -AFhv --color=auto'
-alias l1='l\s -1'
+alias l1='\ls -1'
 alias la='ls -a'
 alias ll='ls -l'
 alias lr='ll -r'
@@ -318,9 +330,11 @@ alias l='ll'
 # For a summary of my research on this see ../documental/commandsearch.md
 # Leave the which binary accessable (if it is a binary)
 if [ -x "$(command -v 'which')" ]; then
+  # shellcheck disable=SC2139 # intentional expansion of backtick
   alias whichbin="$(command -v 'which')"
 # or try to find the binary if a builtin is hiding it
 elif command -v whichfinder.sh > /dev/null 2>&1 && tmpwhichpath="$(whichfinder.sh)"; then
+  # shellcheck disable=SC2139 # intentional expansion of backtick above
   alias whichbin="$tmpwhichpath"
 fi
 
@@ -336,6 +350,8 @@ if [ $is_bash -eq 1 ]; then
   alias setwhere='alias where="type -a"'
 else # Fake a function if there isn't some other builtin where (e.g. zsh's where does what I want)
   if ! command -v 'where' > /dev/null 2>&1; then
+    # shellcheck disable=SC2142 # using alias to define a function
+    # shellcheck disable=SC2154 # variable is used within the function
     alias setwhere='where () { toreturn=0; for x in $@; do command -V $x || toreturn=1; whichbin -a $x; done; return $toreturn; }'
   else
     alias setwhere=':'
@@ -349,7 +365,9 @@ setwhere
 ################################################################################
 # alias management (arguments are NOT POSIX portable)
 if ! resourcing && [ "$aliasfilepath" != "NOTFOUND" ]; then
+  # shellcheck disable=SC2139 # intentional expansion of current file path
   alias amgr="vi '$aliasfilepath'"
+  # shellcheck disable=SC2139 # intentional expansion of current file path
   alias aresrc="will_enable_alias_resource=1; . '$aliasfilepath'; unset env will_enable_alias_resource"
 fi
 
@@ -413,70 +431,53 @@ alias cp='cp -a'
 if [ $dirstack = "present" ]; then
   # Tell pushd to shut the hell up (but allow errors)
   pushd() {
-    command pushd $* > /dev/null
+    # shellcheck disable=SC2164 # cd within function - no need to guard
+    command pushd "$@" > /dev/null
   }
 elif [ $dirstack = "missing" ]; then
   # just alias it to cd
   pushd() {
-    command cd $*
+    # shellcheck disable=SC2164 # cd within function - no need to guard
+    command cd "$@"
   }
 fi
 
 # smart CD to the path containing a file if file given
 cd() {
-  if [ -z $1 ]; then
+  if [ -z "$1" ]; then
     # no arguments has a different default meaning to pushd, but we still want the cd behavior
     # TODO: check if this has any issue for ZSH (autopushd)
+    # shellcheck disable=SC2164 # cd within function - no need to guard
     pushd ~
-  elif [ -z $2 ]; then
-    if [ -f $1 ]; then
-      pushd $(dirname $1)
+  elif [ -z "$2" ]; then
+    if [ -f "$1" ]; then
+      # shellcheck disable=SC2164 # cd within function - no need to guard
+      pushd "$(dirname "$1")"
     else
-      pushd $1
+      # shellcheck disable=SC2164 # cd within function - no need to guard
+      pushd "$1"
     fi
   else
     # multiple arguments overrides this and falls back to the regular cd
-    command cd $*
+    # shellcheck disable=SC2164 # cd within function - no need to guard
+    command cd "$@"
   fi
-}
-
-# cd and/or less is simpler with smartcd
-# Note: cdl can be "odd" when the path is a link etc. since it needs to use
-#       readlink to get the full path. This could be made better by path-parsing,
-#       but I'm too lazy to figure out how to make that portable
-cdl() {
-  local file=$(readlink -f $1)
-  cd $1
-  less $file
 }
 
 #mkcd=mkdir then CD (doesn't need smart CD since we just made the directory)
 mkcd() {
   mkdir "$@"
+  # shellcheck disable=SC2164 # cd within function - no need to guard
   pushd "$@"
 }
 
 # grpdiff
 grpdiff() {
-  echo "< them only, > you only\n-----------------------"
-  groups $1 | tr \  \\n | tail +3 | sort > /tmp/group_compare.$$.left
+  printf "< them only, > you only\n-----------------------\n"
+  groups "$1" | tr \  \\n | tail +3 | sort > /tmp/group_compare.$$.left
   groups | tr \  \\n | sort > /tmp/group_compare.$$.right
   diff /tmp/group_compare.$$.left /tmp/group_compare.$$.right | grep -v '\-\-\-' | grep -v '^[0-9,acd]\+'
   rm /tmp/group_compare.$$.*
-}
-
-# smart background remove
-rmr() {
-  mkdir tombstone > /dev/null 2>&1
-  local tombstone=$(readlink -f tombstone)
-  if [ ! -d "$tombstone" ]; then
-    echo "ERROR: tombstone creation failed"
-    return 1
-  fi
-  mv $* $tombstone/ > /dev/null 2>&1
-  for x in $*; do
-    rm -rf $tombstone/$x
-  done && rmdir $tombstone > /dev/null 2>&1 &
 }
 
 # dua (du all): use a loop to prevent globbing errors on the pickier shells
@@ -485,8 +486,8 @@ rmr() {
 # TODO: look into portability of d & excludes switch: du -hxd 1 --exclude=.snapshot
 dua() {
   for x in .[!.]* ..?* *; do
-    if [ -e $x && $x != ".snapshot/" ]; then
-      du -sx $x
+    if [ -e "$x" ] && [ "$x" != ".snapshot/" ]; then
+      du -sx "$x"
     fi
   done
 }
@@ -496,25 +497,25 @@ dua() {
 if ! resourcing; then
   if command -v 'gitk' > /dev/null 2>&1; then
     gitk() {
-      command gitk $* &
+      command gitk "$@" &
     }
   fi
 
   if command -v 'kate' > /dev/null 2>&1; then
     kate() {
-      command kate $* &
+      command kate "$@" &
     }
   fi
 
   if command -v 'gedit' > /dev/null 2>&1; then
     gedit() {
-      command gedit $* &
+      command gedit "$@" &
     }
   fi
 
   if command -v 'gvim' > /dev/null 2>&1; then
     gvim() {
-      command gvim $* &
+      command gvim "$@" &
     }
   fi
 fi
@@ -522,7 +523,7 @@ fi
 # gitignore.io
 # comma (no space) separated list of templates
 gi() {
-  curl -sLw "\n" https://www.gitignore.io/api/$@
+  curl -sLw "\n" https://www.gitignore.io/api/"$*"
 }
 
 ################################################################################

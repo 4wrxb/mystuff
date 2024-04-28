@@ -1,3 +1,5 @@
+#!/bin/false
+# shellcheck shell=bash
 # ~/.will.bashrc: Cross-platform BASH related options
 
 # Use secho for safe printing only in interactive shells
@@ -36,9 +38,6 @@ HISTFILESIZE=2000
 # check the window size after each command and, if necessary,
 # update the values of LINES and COLUMNS.
 shopt -s checkwinsize
-
-# Use this for where we come from
-mystuffpath="$(readlink -f $(dirname $BASH_SOURCE[0]))"
 
 ################################################################################
 # end of configured options, need to go through this, mostly about color

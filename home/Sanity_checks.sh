@@ -1,33 +1,34 @@
 #!/bin/false
-
+# shellcheck shell=sh
+# shellcheck disable=SC2016 # shfmt uses hard quotes instead of escaping $
 myexit() {
-exit $1
-echo "got code $1"
-echo "externalinstdir: $externalinstdir"
-echo "homedir: $homedir"
-echo "realhome: $realhome"
-echo "instdir: $instdir"
-echo "realinstdir: $realinstdir"
+  # echo "got code $1"
+  # echo "externalinstdir: $externalinstdir"
+  # echo "homedir: $homedir"
+  # echo "realhome: $realhome"
+  # echo "instdir: $instdir"
+  # echo "realinstdir: $realinstdir"
+  exit "$1"
 }
 
 ##############################
 # Get our bearings (path munching)
 ##############################
-if [ ! -z $INST_HOME ]; then
-  homedir=$INST_HOME
-elif [ ! -z $HOME ]; then
-  homedir=$HOME
+if [ -n "$INST_HOME" ]; then
+  homedir="$INST_HOME"
+elif [ -n "$HOME" ]; then
+  homedir="$HOME"
 else
-  echo "ERROR, \$HOME is not set"
+  echo 'ERROR, $HOME is not set'
   myexit 1
 fi
 
-if [ -z $instdir ]; then
-  instdir="$( cd "$( dirname "${0}" )" && pwd )"
+if [ -z "$instdir" ]; then
+  instdir="$(cd "$(dirname "${0}")" && pwd)"
 fi
 
-realhome=`readlink -f $homedir`
-realinstdir=`readlink -f $instdir`
+realhome=$(readlink -f "$homedir")
+realinstdir=$(readlink -f "$instdir")
 
 ##############################
 # Sanity checks
@@ -40,19 +41,19 @@ if [ "${realinstdir##/tmp}" != "${realinstdir}" ]; then
   myexit 1
 fi
 
-
 # Use replacement to test if de-referenced install dir is inside derefenced home
 # the not equals means the replacement *worked* so realinstdir IS in realhome
-if [ ! "${realinstdir##$realhome}" != "${realinstdir}" ]; then
+if [ ! "${realinstdir##"$realhome"}" != "${realinstdir}" ]; then
   echo "WARNING: Installdir ($instdir) is not inside home. This is not recommended,"
   echo "         but OK if you know the dir is permanent and portable. Continue?"
   echo "CAREFUL: if instdir IS in home please answer no and reurn with overrides to fix this"
-  echo "         INST_HOME overrides \$HOME, instdir overrides install dir"
+  echo '         INST_HOME overrides $HOME, instdir overrides install dir'
   old_stty_cfg=$(stty -g)
   stty raw -echo
-  answer=$( while ! head -c 1 | grep -i '[ny]'; do true; done )
-  stty $old_stty_cfg
+  answer=$(while ! head -c 1 | grep -i '[ny]'; do true; done)
+  stty "$old_stty_cfg"
   if echo "$answer" | grep -q "^y"; then
+    # shellcheck disable=SC2034 # debug use
     externalinstdir=1
   else
     myexit 1
@@ -60,16 +61,16 @@ if [ ! "${realinstdir##$realhome}" != "${realinstdir}" ]; then
 fi
 
 # Check if home lives on a remote filesystem, if so confirm it's portable
-if [ "$(stat -f -L -c %T $homedir)" = "*nfs*" ]; then
+if [ "$(stat -f -L -c %T "$homedir")" = "*nfs*" ]; then
   if [ "$homedir" = "$realhome" ]; then # Assume it's portable if it's linked
     echo "WARNING: Home path $homedir is remote, but directly referenced."
     echo "         Is this a portable path?"
     old_stty_cfg=$(stty -g)
     stty raw -echo
-    answer=$( while ! head -c 1 | grep -i '[ny]'; do true; done )
-    stty $old_stty_cfg
+    answer=$(while ! head -c 1 | grep -i '[ny]'; do true; done)
+    stty "$old_stty_cfg"
     if echo "$answer" | grep -q "^n"; then
-      echo "re-run with \"INST_HOME=/portable/home/path\" in front"
+      echo 're-run with "INST_HOME=/portable/home/path" in front'
       myexit 1
     fi
   else
@@ -77,4 +78,5 @@ if [ "$(stat -f -L -c %T $homedir)" = "*nfs*" ]; then
   fi
 fi
 
+# shellcheck disable=SC2034 # used by sourcing script
 sanity_checks_ok=1
