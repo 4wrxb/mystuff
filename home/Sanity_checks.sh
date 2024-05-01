@@ -11,6 +11,19 @@ myexit() {
   exit "$1"
 }
 
+get_yn() {
+  echo "Type y/n for yes/no:"
+  old_stty_cfg=$(stty -g)
+  stty raw -echo
+  answer=$(while ! head -c 1 | grep -i '[ny]'; do true; done)
+  stty "$old_stty_cfg"
+  if echo "$answer" | grep -q "^y"; then
+    return 0 # yes
+  else
+    return 1 # no
+  fi
+}
+
 ##############################
 # Get our bearings (path munching)
 ##############################
@@ -23,6 +36,7 @@ else
   myexit 1
 fi
 
+# OPEN: I forget why I did this - readlink is already below
 if [ -z "$instdir" ]; then
   instdir="$(cd "$(dirname "${0}")" && pwd)"
 fi
@@ -48,12 +62,8 @@ if [ ! "${realinstdir##"$realhome"}" != "${realinstdir}" ]; then
   echo "         but OK if you know the dir is permanent and portable. Continue?"
   echo "CAREFUL: if instdir IS in home please answer no and reurn with overrides to fix this"
   echo '         INST_HOME overrides $HOME, instdir overrides install dir'
-  old_stty_cfg=$(stty -g)
-  stty raw -echo
-  answer=$(while ! head -c 1 | grep -i '[ny]'; do true; done)
-  stty "$old_stty_cfg"
-  if echo "$answer" | grep -q "^y"; then
-    # shellcheck disable=SC2034 # debug use
+  if get_yn; then
+    # shellcheck disable=SC2034 # used by sourcing script
     externalinstdir=1
   else
     myexit 1
@@ -80,3 +90,46 @@ fi
 
 # shellcheck disable=SC2034 # used by sourcing script
 sanity_checks_ok=1
+
+##############################
+# safe_cp
+##############################
+# Make sure we have the best working cp command for these scripts
+testa=/tmp/testa.$$
+testb=/tmp/testb.$$
+alias _test_prep 'rm -f "$testb"; touch "$testa"; :'
+if (_test_prep && \cp -viR --no-preserve=ownership "$testa" "$testb") > /dev/null; then
+  # Best case verbose & interactive using --no-preserve=ownership to force creation of the file as running user
+  safe_cp() {
+    \cp -viR --no-preserve=ownership "$@"
+  }
+else
+  # Otherwise we will try to chown - but check other flags:
+  if (_test_prep && \cp -viR "$testa" "$testb"); then
+    _safe_cp_flags="-viR"
+  elif \cp -iR; then
+    _safe_cp_flags="-iR"
+  else
+    _safe_cp_flags="-R"
+  fi
+
+  if (_test_prep && \chown -R "$USER" "$testa"); then
+    # Chown is possible - get the last argument to cp and make sure $USER owns it
+    safe_cp() {
+      \cp "$_safe_cp_flags" "$@"
+      for last; do :; done
+      \chown -R "$USER" "$last"
+    }
+  else
+    # Fall-back - just copy
+    safe_cp() {
+      \cp "$_safe_cp_flags" "$@"
+    }
+  fi
+fi
+
+# TODO: testing differnt forms of safe_cp
+# TODO: return status of safe cp?
+
+unset testa testb
+unalias _test_prep

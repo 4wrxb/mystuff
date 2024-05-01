@@ -1,58 +1,31 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2016 # shfmt uses hard quotes instead of escaping $
+# shellcheck shell=sh
 
-# FIXME: known bashisms: select input method
+# Loops any .will.* files in mystuff/home and injects them into the dotfiles
+# NOTE: limited to posix-complaint RC files, other rc files are handled by Install_from_dir.sh
 
-# Updated "includer" script
+# REMOVED checks for old installs, not finding use for that support
 
-oldfilecheck() {
-  oldinclude=$1
-  if [ -f "$oldinclude" ]; then
-    echo "WARNING: An old copy of $(basename "$oldinclude") exists in HOME. New method keeps"
-    echo "         these files in the install dir. Would you like to remove the file?"
-    echo "         There will be an option to remove the old include (if it exists) later."
-    select yn in "Yes" "No" "Disable old file checks"; do
-      case $yn in
-        Yes)
-          rm "$oldinclude"
-          return 0
-          ;;
-        No) return 0 ;;
-        "Disable old file checks") return 99 ;;
-      esac
-    done
-  fi
-  return 0
-}
-
-oldincludecheck() {
+detect_sub_dotfile() {
   dotfile=$1
-  if result=$(\grep '$HOME/.will.' "$dotfile"); then
-    if [ "$(\grep -c '$HOME/.will.' "$dotfile")" -gt 2 ]; then
-      echo "ERROR: There appears to be mor ethan one old include in $dotfile."
-      echo "        The script cannot handle this. Please remove old includes or add it manually."
-      return 0
+  if [ -f "$dotfile"."$USER" ]; then
+    if result=$(grep -E '(^|^[^#]+;)[ \t]*(source|\.).*(\$USER|'"$USER"')' $dotfile); then
+      echo "$dotfile.$USER exists and it (or $dotfile.\$USER) is already included in $dotfile:"
+      echo "  $result"
+      echo "  would you like to inject the mystuff include there instead?"
     fi
-    echo "WARNING: An old include may be in $dotfile."
-    echo "         New method keeps these files in the install dir. Would you like to"
-    echo "         replace this old include? Otherwise a new one will be added."
-    echo "$result"
-    select yn in "Yes" "No" "Disable old include checks"; do
-      case $yn in
-        Yes) return 1 ;;
-        No) return 0 ;;
-        "Disable old include checks") return 99 ;;
-      esac
-    done
+    if get_yn; then
+      dotfile="$dotfile.$USER"
+    fi
   fi
-  return 0
 }
 
 ##############################
 # Path Finder & Sanity checks
 ##############################
 sanity_checks_ok=0
-if ! . Sanity_checks.sh || [ $sanity_checks_ok -ne 1 ]; then
+if ! . "$(readlink -e "$(dirname "$0")")"/Sanity_checks.sh || [ $sanity_checks_ok -ne 1 ]; then
   echo "The sanity check script failed or could not be found, exiting."
   exit
 else
@@ -70,102 +43,81 @@ if [ "$externalinstdir" -ne 1 ]; then
   # By using de-referenced paths here we ensure a mismatch of portable paths is fixed
   instdir='$HOME'"${realinstdir##"$realhome"}"
 fi
-dooldfilechecks=1
-dooldincludechecks=1
+
 # use realinstdir here because instdir has been string-ified for injections
 for includefile in "$realinstdir"/.will.*; do
-  # Figure out the name of the dotfile
+  # Figure out the base name of the target dotfile
   dotfile=${HOME}/${includefile##*.will}
-  # default is to take no actions
-  awkit=0
-  appendit=0
-  waterfall=1
-  # Check if the home directory has an old .will.* file (now kept in install dir)
-  if [ $dooldfilechecks -eq 1 ]; then
-    oldfilecheck "${HOME}/.will${includefile##*.will}"
-    if [ $? -eq 99 ]; then
-      dooldfilechecks=0
-    fi
-  fi
+
+  snippet=/tmp/"$dotfile".snip.$$
+
+  # Generate the expected include snippet regardless
+  {
+    echo "if [ -f \"$includefile\" ]; then"
+    echo "    . \"$includefile\""
+    echo "fi"
+  } > "$snippet"
+
+  # Flags for moving files around after this logic
+  addref=0
+  waterfall=0
+
   # Now check if the base dotfile actually exists
   if [ -f "$dotfile" ]; then
-    echo "attempting to update $dotfile"
-    # Now check for an old include
-    if [ $dooldincludechecks -eq 1 ]; then
-      oldincludecheck "$dotfile"
-      case $? in
-        99) dooldincludechecks=1 ;;
-        0) appendit=1 ;;
-        1) awkit=1 ;;
-      esac
-    else
-      # Without old file checks default to append
-      appendit=1
-    fi
-    # Convert includefile to $HOME based path
-    includefile='$HOME'"${includefile##"$realhome"}"
-    # Now check for ANY .will inclusion except old ones
-    if result=$(\grep -v '$HOME/.will.' "$dotfile" | \grep ".will."); then
-      echo "WARNING: An include already exists in $dotfile:"
-      echo "         Does it match the current install dir ${instdir}?"
-      echo "$result"
-      echo "         Yes will not make any changes"
-      if [ $appendit -eq 1 ]; then
-        echo "         No will append a new include, but only into ${dotfile}.new"
+    # Redirect to a user-level file if applicable
+    dotfile=$(detect_sub_dotfile "$dotfile")
+
+    # Now check for existing inclusion
+    snipexists=0
+    # Most accurate method - diff that supports -w & line formats
+    if diff -w --new-line-format="" "$snippet" "$snippet"; then
+      if [ -n "$(diff -w "$snippet" "$dotfile")" ]; then
+        echo "Existing include in $dotfile, no changes needed"
       else
-        echo "         No will continue updating the old include, but only into ${dotfile}.new"
+        snipexists=1
       fi
-      select yn in "Yes" "No"; do
-        case $yn in
-          Yes)
-            echo "$dotfile was not updated"
-            echo
-            waterfall=0
-            awkit=0
-            appendit=0
-            break
-            ;; # Do nothing
-          No)
-            waterfall=0
-            break
-            ;;
-        esac
-      done
     fi
-    if [ $awkit -eq 1 ]; then
-      # If the user said to update include use awk
-      echo "updating existing include in $dotfile"
-      awk "{gsub(/\\\$HOME\/.will./,\"$instdir/.will.\"); print}" "$dotfile" > "$dotfile".new
-    fi
-    if [ $appendit -eq 1 ]; then
-      # otherwise, copy the dotfile and append
-      \cp -a "$dotfile" "$dotfile".new
-      {
-        echo
-        echo "if [ -f \"$includefile\" ]; then"
-        echo "    . \"$includefile\""
-        echo "fi"
-        echo
-      } >> "$dotfile".new
-    fi
-    if [ $waterfall -eq 1 ]; then
-      \cp -ai "$dotfile" "$dotfile".old && mv "$dotfile".new "$dotfile"
-      echo "$dotfile updated, PLEASE DIFF against ${dotfile}.old"
-      echo
-    elif [ -f "$dotfile".new ]; then
-      echo "$dotfile changes were made but NOT applied, please review ${dotfile}.new and update"
-      echo
+
+    # If no exact include found grep for a possible match
+    if [ $snipexists -ne 1 ]; then
+      if result=$(grep -E '(^|^[^#]+;)[ \t]*(source|\.).*'"$includefile"); then
+        echo "Possible existing include in $dotfile:"
+        grep -H -C2 -E '(^|^[^#]+;)[ \t]*(source|\.).*'"$includefile"
+        echo "Should look like:"
+        cat "$snippet"
+        echo "ACTION REQUIRED: manually merge $dotfile.snippet into $dotfile if required"
+        addref=1
+      else
+        echo "attempting to update $dotfile"
+
+        # Convert includefile to $HOME based path
+        includefile='$HOME'"${includefile##"$realhome"}"
+
+        safe_cp "$dotfile" "$dotfile".new
+
+        cat "$snippet" >> "$dotfile".new
+
+        waterfall=1
+      fi
     fi
   else
-    echo "Creating a $(basename "$dotfile") to source $includefile"
-    echo
-    {
-      echo "if [ -f \"$includefile\" ]; then"
-      echo "    . \"$includefile\""
-      echo "fi"
-      echo
-    } > "$dotfile"
+    echo "Creating a $dotfile to source $includefile"
+    safe_cp "$snippet" "$dotfile"
   fi
+
+  if [ $addref -eq 1 ]; then
+    safe_cp "$snippet" "$dotfile".snippet
+  fi
+
+  if [ $waterfall -eq 1 ]; then
+    safe_cp "$dotfile" "$dotfile".old && mv "$dotfile".new "$dotfile" && echo "$dotfile updated, PLEASE DIFF against ${dotfile}.old" || echo "Issue updating $dotfile"
+    echo
+  elif [ -f "$dotfile".new ]; then
+    echo "$dotfile changes were made but NOT applied, please review ${dotfile}.new and update"
+    echo
+  fi
+
+  rm "$snippet"
 done
 
 exit 0
