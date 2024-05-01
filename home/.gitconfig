@@ -4,6 +4,10 @@
 [push]
 	# Default as of 2.0 - but sometimes we end up with old versions
 	default = simple
+[core]
+	# Some basic options we want if includes aren't working
+	excludesfile = ~/global.gitignore
+	preloadindex = true
 [user]
 	name = Will O
 	email = 0100wrxb@gmail.com
