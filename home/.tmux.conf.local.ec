@@ -273,17 +273,23 @@ tmux_conf_theme_right_separator_sub="|"
 #     - #{uptime_s}
 #     - #{username}
 #     - #{username_ssh}
-tmux_conf_theme_status_left=" ❐ #S | ↑#{?uptime_y, #{uptime_y}y,}#{?uptime_d, #{uptime_d}d,}#{?uptime_h, #{uptime_h}h,}#{?uptime_m, #{uptime_m}m,} "
-tmux_conf_theme_status_right=" #{prefix}#{mouse}#{pairing}#{synchronized}#{?battery_status,#{battery_status},}#{?battery_bar, #{battery_bar},}#{?battery_percentage, #{battery_percentage},} , %R , %d %b | #{username}#{root} | #{hostname} | #{osname} "
+tmux_conf_theme_status_left=" ❐ #S | #{numcpu} CPU: #{myload} | RAM: #{mymem} | SWP: #{myswap} "
+tmux_conf_theme_status_right=" #{prefix}#{mouse}#{pairing}#{synchronized} , #{ww} , %D , %R | #{username}#{root} | #h | #{osname} "
+
+# TODO: cpu/mem coloring? Rainbarf? Plugin? https://github.com/tmux-plugins/tmux-cpu or https://github.com/thewtex/tmux-mem-cpu-load
+# TODO: get ion session name? nbstatus jobs --target zsc3_interactive --fields "Workstation,InteractiveSessionName::90"
+
+# set-window-option -g status-right ' #( vmstat 1 2 | tail -1 | awk "{ USAGE=100-\$15; if (USAGE < 20) { printf \"#[fg=green,bright]\"; } else if (USAGE < 80) { printf \"#[fg=yellow,bright]\"; } else { printf \"#[bg=red,fg=white,bright]\"; }; print \" \" USAGE \"% \" }" )'
 
 # status left style
-tmux_conf_theme_status_left_fg="$tmux_conf_theme_colour_6,$tmux_conf_theme_colour_7,$tmux_conf_theme_colour_8"
-tmux_conf_theme_status_left_bg="$tmux_conf_theme_colour_9,$tmux_conf_theme_colour_10,$tmux_conf_theme_colour_11"
-tmux_conf_theme_status_left_attr="bold,none,none"
+tmux_conf_theme_status_left_fg="$tmux_conf_theme_colour_6,$tmux_conf_theme_colour_7,$tmux_conf_theme_colour_8,$tmux_conf_theme_colour_6"
+tmux_conf_theme_status_left_bg="$tmux_conf_theme_colour_9,$tmux_conf_theme_colour_10,$tmux_conf_theme_colour_11,$tmux_conf_theme_colour_9"
+tmux_conf_theme_status_left_attr="bold,none,none,none"
 
 # status right style
 tmux_conf_theme_status_right_fg="$tmux_conf_theme_colour_12,$tmux_conf_theme_colour_13,$tmux_conf_theme_colour_15,$tmux_conf_theme_colour_13"
-tmux_conf_theme_status_right_bg="$tmux_conf_theme_colour_15,$tmux_conf_theme_colour_16,$tmux_conf_theme_colour_17,#820BA6"
+#tmux_conf_theme_status_right_bg="$tmux_conf_theme_colour_15,$tmux_conf_theme_colour_16,$tmux_conf_theme_colour_17,#820BA6"
+tmux_conf_theme_status_right_bg="$tmux_conf_theme_colour_15,$tmux_conf_theme_colour_16,$tmux_conf_theme_colour_17,#{@osname_color}"
 tmux_conf_theme_status_right_attr="none,none,bold,none"
 
 # pairing indicator
@@ -472,7 +478,53 @@ run '"$TMUX_PROGRAM" source "$TMUX_CONF_USER"'
 # # /!\ do not "uncomment" the functions: the leading "# " characters are needed
 #
 # osname() {
-#   echo not_defined
+#   if [ -f /etc/os-release ]; then
+#     . /etc/os-release
+#     echo "${NAME}${VERSION}"
+#     [ "${VERSION#15}" != "${VERSION}" ] && tmux set -g '@osname_color' '#820BA6' || tmux set -g '@osname_color' "#d70000"
+#   else
+#     # LEGACY
+#     if [ -f /etc/SuSE-brand ]; then
+#       BRAND=`cat /etc/SuSE-brand | head -1`
+#     elif [ -f /etc/SUSE-brand ]; then
+#       BRAND=`cat /etc/SUSE-brand | head -1`
+#     else
+#       BRAND="SLES?"
+#     fi
+#     MAJOR=`cat /etc/SuSE-release | grep VERSION | awk -F " " '{print $3}'`
+#     PATCH=`cat /etc/SuSE-release | grep PATCHLEVEL | awk -F " " '{print $3}'`
+#     echo "${BRAND}${MAJOR}v$PATCH"
+#   fi
+#   sleep 3600
+# }
+#
+# numcpu() {
+#   nproc
+# }
+#
+# osload() {
+#   cut -d' ' -f1,2 /proc/loadavg
+# }
+#
+# myload() {
+#   cut -d' ' -f1,2 /proc/loadavg | xargs echo $(nproc) | awk -F" " '{printf "%3.0f%% %3.0f%%\n", $(2)/$(1)*100, $(3)/$(1)*100}'
+# }
+#
+# mymem() {
+#   grep -E "(MemAvailable|MemTotal):" /proc/meminfo | sort | xargs | awk -F" " '{printf "%1.1f/%1.0fG", ($5-$2)/1024/1024, $5/1024/1024}'
+# }
+#
+# mymempct() {
+#   grep -E "(MemAvailable|MemTotal):" /proc/meminfo | sort | xargs | awk -F" " '{printf "%1.0f", ($5-$2)/$5*100}'
+# }
+#
+# myswap() {
+#   grep -E "(SwapFree|SwapTotal):" /proc/meminfo | sort | xargs | awk -F" " '{printf "%1.1f/%1.0fG", ($5-$2)/1024/1024, $5/1024/1024}'
+# }
+#
+#
+# ww() {
+#   workweek -f "%yww%02IW.%Iw"
 # }
 #
 # weather() {                                         # see https://github.com/chubin/wttr.in#one-line-output
