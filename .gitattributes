@@ -1,7 +1,0 @@
-id_rsa filter=git-crypt diff=git-crypt
-*.*_key filter=git-crypt diff=git_crypt
-*.key filter=git-crypt diff=git-crypt
-*.key.* filter=git-crypt diff=git-crypt
-*_private.* filter=git-crypt diff=git-crypt
-*.private.* filter=git-crypt diff=git-crypt
-

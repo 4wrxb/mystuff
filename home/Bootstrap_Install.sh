@@ -4,11 +4,6 @@ if ! command -v 'git' > /dev/null 2>&1; then
   to_install="git"
 fi
 
-# TODO: add option to bypass git-crypt
-if ! command -v 'git-crypt' > /dev/null 2>&1; then
-  to_install="$to_install git-crypt"
-fi
-
 if [ -n "$to_install" ]; then
   echo "$to_install not found, attempting to install."
   if ! command -v 'sudo' > /dev/null 2>&1; then
@@ -32,7 +27,7 @@ if [ -n "$to_install" ]; then
     echo "Using yum"
     sudo yum install "$to_install"
   else
-    echo "Package manager not recognized, please install git and git-crypt and ensure it's in your path"
+    echo "Package manager not recognized, please install git and ensure it's in your path"
     exit 1
   fi
 
@@ -44,7 +39,7 @@ fi
 # FIXME: add option for specifying a branch when running bootstrap
 git clone https://github.com/4wrxb/mystuff.git "$HOME"/mystuff
 
-# TODO: git-crypt & SSH key
+# TODO: SSH key
 
 # Set the origin back to ssh
 cd "$HOME"/mystuff || exit 1

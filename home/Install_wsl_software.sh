@@ -15,8 +15,7 @@ fi
 
 # apt install
 # GENERAL:
-# - git-crypt (probably already done by bootstrap, but harmless to repeat)
-# - git-gui (bring gitk and a lot of font/X11 stuff I'll need anyway
+# - git-gui (bring gitk and a lot of font/X12 stuff I'll need anyway)
 # - go
 # - kdiff3
 # - meld
@@ -38,7 +37,7 @@ fi
 # FIXME: prompt for openwrt? Won't need it on work machines
 echo "Running apt install through sudo. Enter password if prompted."
 sudo apt update
-sudo apt install git-crypt git-gui go kdiff3 meld perlbrew python3 unzip wget zsh build-essential libncurses5-dev libncursesw5-dev python2 zlib1g-dev gawk gettext libssl-dev xsltproc
+sudo apt install git-gui gitk kdiff3 meld perlbrew python3 unzip wget zsh build-essential libncurses5-dev libncursesw5-dev python2 zlib1g-dev gawk gettext libssl-dev xsltproc
 
 # If gopath is already being set leave it alone
 if [ -z "$GOPATH" ]; then
