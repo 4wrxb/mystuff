@@ -1,7 +1,0 @@
-1) install luci-ssl (opkg install luci-ssl) or related
-2) create the certdrop user and directory (./certdrop_user.sh)
-3) restart dropbear (/etc/init.d/dropbear restart)
-4) sync the keys from remote host
-5) edit /etc/confg/uhttpd to use the certificates from remote host
-6) restart uhttpd (/etc/init.d/uhttpd restart)
-

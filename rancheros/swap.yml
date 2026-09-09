@@ -1,8 +1,0 @@
-#cloud-config
-  runcmd:
-    # allocate the swap file, default block size (bs) of 512B so 1M count = 512MiB swap
-    - sudo dd if=/dev/zero of=/swapfile bs=512 count=1M
-    - sudo chmod 600 /swapfile
-    - sudo mkswap /swapfile
-    - sudo swapon /swapfile
-

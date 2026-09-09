@@ -1,4 +1,0 @@
-#cloud-config
-rancher:
-  sysctl:
-    fs.inotify.max_user_watches: 1048576
